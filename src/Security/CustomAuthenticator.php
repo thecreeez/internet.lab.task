@@ -2,11 +2,13 @@
 
 namespace App\Security;
 
+use App\Repository\UserRepository;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\AbstractLoginFormAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\CsrfTokenBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
@@ -22,7 +24,10 @@ class CustomAuthenticator extends AbstractLoginFormAuthenticator
 
     private UrlGeneratorInterface $urlGenerator;
 
-    public function __construct(UrlGeneratorInterface $urlGenerator)
+    public function __construct(
+        UrlGeneratorInterface           $urlGenerator,
+        private readonly UserRepository $userRepository
+    )
     {
         $this->urlGenerator = $urlGenerator;
     }
@@ -31,15 +36,21 @@ class CustomAuthenticator extends AbstractLoginFormAuthenticator
     {
         $username = $request->request->get('_username', '');
 
-        $request->getSession()->set('_security.last_username', $username);
+        $user = $this->userRepository->findOneBy(['username' => $username]);
 
-        return new Passport(
-            new UserBadge($username),
-            new PasswordCredentials($request->request->get('_password', '')),
-            [
-                new CsrfTokenBadge('authenticate', $request->request->get('_csrf_token')),
-            ]
-        );
+        if (in_array("ROLE_ADMIN", $user->getRoles())) {
+            $request->getSession()->set('_security.last_username', $username);
+
+            return new Passport(
+                new UserBadge($username),
+                new PasswordCredentials($request->request->get('_password', '')),
+                [
+                    new CsrfTokenBadge('authenticate', $request->request->get('_csrf_token')),
+                ]
+            );
+        }
+
+        throw new AuthenticationException();
     }
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response

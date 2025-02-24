@@ -9,6 +9,7 @@ use ApiPlatform\Metadata\Put;
 use ApiPlatform\OpenApi\Model\Operation;
 use ApiPlatform\OpenApi\Model\RequestBody;
 use App\Controller\Api\User\UserDeleteController;
+use App\Controller\Api\User\UserGetMeController;
 use App\Controller\Api\User\UserPostController;
 use App\Controller\Api\User\UserPutController;
 use App\Repository\UserRepository;
@@ -22,6 +23,13 @@ use Symfony\Component\Serializer\Attribute\Groups;
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[UniqueEntity(fields: ['username'])]
 #[GetCollection(
+    uriTemplate: '/user',
+    controller: UserGetMeController::class,
+    paginationEnabled: false,
+    normalizationContext: ['groups' => ['user:read']],
+)]
+#[GetCollection(
+    uriTemplate: '/users',
     normalizationContext: ['groups' => ['user:read']]
 )]
 #[Post(
