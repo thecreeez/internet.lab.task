@@ -2,14 +2,126 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
+use ApiPlatform\OpenApi\Model\Operation;
+use ApiPlatform\OpenApi\Model\RequestBody;
+use App\Controller\Api\User\UserDeleteController;
+use App\Controller\Api\User\UserPostController;
+use App\Controller\Api\User\UserPutController;
 use App\Repository\UserRepository;
+use ArrayObject;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[UniqueEntity(fields: ['username'])]
+#[GetCollection(
+    normalizationContext: ['groups' => ['user:read']]
+)]
+#[Post(
+    controller: UserPostController::class,
+    openapi: new Operation(
+        requestBody: new RequestBody(
+            content: new ArrayObject([
+                'application/json' => [
+                    'schema' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'username' => [
+                                'type' => 'string',
+                                'required' => true,
+                                'example' => 'username'
+                            ],
+                            'password' => [
+                                'type' => 'string',
+                                'required' => true,
+                                'example' => 'password'
+                            ],
+                            'passwordConfirmation' => [
+                                'type' => 'string',
+                                'required' => true,
+                                'example' => 'password'
+                            ],
+                            'description' => [
+                                'type' => 'string',
+                                'required' => false,
+                                'example' => 'About me'
+                            ],
+                        ]
+                    ]
+                ]
+            ])
+        )
+    )
+)]
+#[Put(
+    controller: UserPutController::class,
+    openapi: new Operation(
+        requestBody: new RequestBody(
+            content: new ArrayObject([
+                'application/json' => [
+                    'schema' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'currentPassword' => [
+                                'type' => 'string',
+                                'required' => true,
+                                'example' => 'currentPassword'
+                            ],
+                            'newUsername' => [
+                                'type' => 'string',
+                                'required' => false,
+                                'example' => 'newUsername'
+                            ],
+                            'newPassword' => [
+                                'type' => 'string',
+                                'required' => false,
+                                'example' => 'newPassword'
+                            ],
+                            'newPasswordConfirmation' => [
+                                'type' => 'string',
+                                'required' => false,
+                                'example' => 'newPassword'
+                            ],
+                            'description' => [
+                                'type' => 'string',
+                                'required' => false,
+                                'example' => 'About me'
+                            ],
+                        ]
+                    ]
+                ]
+            ])
+        )
+    )
+)]
+#[Delete(
+    controller: UserDeleteController::class,
+    openapi: new Operation(
+        requestBody: new RequestBody(
+            content: new ArrayObject([
+                'application/json' => [
+                    'schema' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'password' => [
+                                'type' => 'string',
+                                'required' => true,
+                                'example' => 'password'
+                            ],
+                        ]
+                    ]
+                ]
+            ])
+        )
+    )
+)]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     public const array ROLES = [
@@ -19,10 +131,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
+    #[Groups(['user:read'])]
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 180, unique: true)]
+    #[Groups(['user:read'])]
     private ?string $username;
+
+    #[ORM\Column(type: 'string', length: 2000, nullable: true)]
+    #[Groups(['user:read'])]
+    private ?string $description = null;
 
     #[ORM\Column(type: 'json')]
     private array $roles = [];
@@ -109,12 +227,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): void
+    {
+        $this->description = $description;
+    }
+
     /**
      * @see UserInterface
      */
     public function eraseCredentials(): void
     {
-        // If you store any temporary, sensitive data on the user, clear it here
-        // $this->plainPassword = null;
     }
 }

@@ -10,6 +10,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
@@ -75,6 +76,7 @@ class UserCrudController extends AbstractCrudController
         yield IdField::new('id')->onlyOnIndex();
 
         yield TextField::new('username', 'Логин')->setColumns(3);
+        yield TextEditorField::new('description', 'Обо мне')->setColumns(3);
 
         $plainPassword = TextField::new('plainPassword')
             ->setRequired(false)
