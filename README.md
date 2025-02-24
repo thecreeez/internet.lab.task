@@ -1,4 +1,12 @@
-## Symfony 7 EasyAdmin Api-Platform template
+## Internet Lab
+
+[Demo](http://dgrew.ru:5051/)
+
+Admin data:
+```
+login: admin
+password: foo
+```
 
 - rebase .env to .env.local
 - change DATABASE_URL
